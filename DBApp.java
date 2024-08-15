@@ -7,10 +7,12 @@ import java.util.Hashtable;
 
 public class DBApp {
 
-
+	Hashtable<String, Table> tables;
+	MetaDataCatalog metaDataCatalog;
 
 	public DBApp( ){
-		
+		tables = new Hashtable<>();
+		metaDataCatalog = new MetaDataCatalog();
 	}
 
 	// init does whatever initialization you would like. It takes as input 
@@ -29,27 +31,29 @@ public class DBApp {
 	// another Table and column, respectively, that are being referenced 
 	// by strReferencingColumn.  
 	// strReferencingColumn is one of the columns belonging to this table 
-	// and will be passed in the Hashtable htblColNameType..
+	// and will be passed in the Hashtable htblColNameType.
 	// This method will throw an Exception if specified strReferencedTable 
 	// and or strReferencedColumn do not exist, or different data type 
 	// than strReferencingColumn.
-	// If no reference to another table exists, last three parameters are 
+	// If no reference to another table exists, last three parameters are
 	// passed null.
-	public void createTable(String strTableName, 
-							Hashtable<String,String> htblColNameType, 
+
+	public void createTable(String strTableName,
+							Hashtable<String,String> htblColNameType,
 							String strClusteringKeyColumn,
 							String strReferencedTable,
 							String strReferencedColumn,
 							String strReferencingColumn )
-							throws DBAppException{
-									
-	
-	
+			throws DBAppException{
+		metaDataCatalog.addTableMetaData(strTableName, htblColNameType, strClusteringKeyColumn,
+				strReferencedTable, strReferencedColumn, strReferencingColumn);
+
+		Table table = new Table();
+		tables.put(strTableName, table);
 	}
 
 
-
-	// following method creates a B+ tree index on specifid 
+	// following method creates a B+ tree index on specified
 	// column in specified table.
 	public void createIndex(String strTableName,
 							String strColName,
@@ -99,7 +103,7 @@ public class DBApp {
 	}
 
 	// following method is used to dump a specific page in a specific 
-	// table table. What is passed is the page index in the array.
+	// table. What is passed is the page index in the array.
 	public void dumpPage( String strTable, int nPageNumber ) throws DBAppException {
 		
 	}
@@ -127,17 +131,17 @@ public class DBApp {
 			
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 2 ));
-			htblColNameValue.put("major", new String( "DMET" ) );			
+			htblColNameValue.put("major", new String( "DMET" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 			
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 3 ));
-			htblColNameValue.put("major", new String( "BI" ) );			
+			htblColNameValue.put("major", new String( "BI" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 			
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 4 ));
-			htblColNameValue.put("major", new String( "IET" ) );			
+			htblColNameValue.put("major", new String( "IET" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 			
 			htblColNameValue = new Hashtable( );

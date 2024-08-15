@@ -1,3 +1,4 @@
+package BTree;
 
 enum TreeNodeType {
 	InnerNode, LeafNode
