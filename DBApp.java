@@ -11,6 +11,7 @@ public class DBApp {
 	MetaDataCatalog metaDataCatalog;
 
 	public DBApp( ){
+		init(3);
 		tables = new Hashtable<>();
 		metaDataCatalog = new MetaDataCatalog();
 	}
@@ -85,7 +86,8 @@ public class DBApp {
 	public void deleteFromTable(String strTableName,
 								Hashtable<String,Object> htblColNameValue)
 								throws DBAppException{
-	
+		Table table = tables.get(strTableName);
+		table.deleteRecord(htblColNameValue);
 	}
 
 	// following method is used to join any number of tables. Created B+ 

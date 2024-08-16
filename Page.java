@@ -15,19 +15,65 @@ public class Page {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) {
                 obj.gapRow = i;
+                obj.gapPage = 1;
             }
             if(tuples[i] != null && tuples[i].compare(clusteringKey, tuple)) {
-                obj.newRow = (i == 0 ? nMaxRows - 1 : i - 1);
-                obj.samePage = i != 0;
+                if(obj.gapPage != -1) {
+                    obj.newRow = (i == 0 ? nMaxRows - 1 : i - 1);
+                    obj.samePage = i != 0;
+                }else
+                    obj.newRow = i;
                 return true;
             }
         }
         return false;
     }
     public boolean getNextGap(ObjWrapper obj) {
+        for(int i = obj.newRow; i < nMaxRows; i++) {
+            if(tuples[i] == null) {
+                obj.gapRow = i;
+                return true;
+            }
+        }
+        return false;
+    }
+    public Tuple getTuple(int index) {
+        return tuples[index];
+    }
+    public void getLastGap(ObjWrapper obj) {
+        for(int i = nMaxRows - 1; i >= 0; i--) {
+            if(tuples[i] == null) {
+                obj.gapRow = i;
+                obj.gapPage = 1;
+            }else {
+                obj.newRow = -2;
+                break;
+            }
+        }
+    }
+    public void getLastRecord(ObjWrapper obj) {
+        for(int i = 0; i < nMaxRows; i++) {
+            if(tuples[i] != null) {
+                obj.newRow = i;
+            }
+        }
+    }
+    public boolean deleteRecord(Tuple tuple) {
+        for(int i = 0; i < nMaxRows; i++) {
+            if (tuples[i] != null && tuples[i].isSame(tuple)) {
+                tuples[i] = null;
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean isEmpty() {
+        for(int i = 0; i < nMaxRows; i++) {
+            if(tuples[i] != null) return false;
+        }
         return true;
     }
-    public void insertRecord(String strClusteringKey, int index, Tuple tuple) {
+    public void insertRecord(int index, Tuple tuple) {
         tuples[index] = tuple;
     }
 }
