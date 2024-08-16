@@ -25,4 +25,10 @@ public class MetaDataCatalog {
         metaData.strReferencingColumn = strReferencingColumn;
         tablesMetaData.put(tableName, metaData);
     }
+    public String getClusteringKeyColumn(String tableName) {
+        return tablesMetaData.get(tableName).strClusteringKeyColumn;
+    }
+    public Hashtable<String,String> gethtblColNameType(String tableName) {
+        return tablesMetaData.get(tableName).htblColNameType;
+    }
 }

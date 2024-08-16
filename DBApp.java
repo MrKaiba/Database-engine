@@ -18,8 +18,7 @@ public class DBApp {
 	// init does whatever initialization you would like. It takes as input 
 	// the number of rows/tuples per page. 
 	public void init( int nMaximumRowsinPage ){
-		
-		
+		Page.setnMaxRows(nMaximumRowsinPage);
 	}
 
 	// htblColNameValue will have the column name as key and the data
@@ -59,7 +58,7 @@ public class DBApp {
 							String strColName,
 							String strIndexName) throws DBAppException {
 								
-	
+
 	}
 
 	// following method inserts one row only.
@@ -69,7 +68,10 @@ public class DBApp {
 	public void insertIntoTable(String strTableName,
 								Hashtable<String,Object> htblColNameValue)
 								throws DBAppException{
-	
+		Table table = tables.get(strTableName);
+		String clusteringKey = metaDataCatalog.getClusteringKeyColumn(strTableName);
+		Hashtable<String, String>htblColNameType = metaDataCatalog.gethtblColNameType(strTableName);
+		table.insertRecord(clusteringKey, htblColNameValue, htblColNameType);
 	}
 
 
@@ -158,7 +160,7 @@ public class DBApp {
 			htblColNameType = new Hashtable( );
 			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("name", "java.lang.String");
-			htblColNameType.put("gpa", "java.lang.double");
+			htblColNameType.put("gpa", "java.lang.Double");
 			htblColNameType.put("majorID", "java.lang.Integer");
 			dbApp.createTable( strTableName, htblColNameType, "id", "Major","id", "majorID" );
 			dbApp.createIndex( strTableName, "id", "student_id_Index" );
