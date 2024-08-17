@@ -17,9 +17,10 @@ public class Page {
     public String toString() {
         String str = "";
         for (int i = 0; i < nMaxRows; i++) {
-            str += tuples[i].toString() + ",";
+            if(tuples[i] == null) continue;
+            str += tuples[i].toString() + "\n";
         }
-        return str.substring(0, str.length() - 1);
+        return str;
     }
 
     public boolean tupleFound(String clusteringKey, Tuple tuple, ObjWrapper obj) {

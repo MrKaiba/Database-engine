@@ -132,33 +132,44 @@ public class DBApp {
 			htblColNameValue.put("id", Integer.valueOf( 1 ));
 			htblColNameValue.put("major", new String( "CSEN" ) );			
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
-			
+
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 2 ));
 			htblColNameValue.put("major", new String( "DMET" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
-			
+
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 3 ));
 			htblColNameValue.put("major", new String( "BI" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
-			
+
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 4 ));
 			htblColNameValue.put("major", new String( "IET" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
-			
+
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 5 ));
 			htblColNameValue.put("major", new String( "MECHA" ) );			
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
-			
+
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 6 ));
-			htblColNameValue.put("major", new String( "Pharma" ) );			
+			htblColNameValue.put("major", new String( "Pharma" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
-			
-			strTableName = "Student";
+
+			System.out.println(dbApp.tables.get("Major").toString());
+
+			htblColNameValue = new Hashtable( );
+			htblColNameValue.put("id", Integer.valueOf( 4 ));
+			htblColNameValue.put("major", new String( "IET" ) );
+			dbApp.deleteFromTable(strTableName, htblColNameValue);
+
+		    System.out.println(dbApp.tables.get("Major").toString());
+
+
+
+		strTableName = "Student";
 			htblColNameType = new Hashtable( );
 			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("name", "java.lang.String");
