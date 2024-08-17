@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -32,11 +31,10 @@ public class Table {
     public void deleteRecord(Hashtable<String,Object> htblColNameValue) {
         Tuple tuple = new Tuple(htblColNameValue);
         for(int i = 0; i < pagesSize; i++) {
-            if(pages[i] != null) {
-                if(pages[i].deleteRecord(tuple)) {
-                    if (pages[i].isEmpty()) pages[i] = null;
-                    return;
-                }
+            if(pages[i] == null) continue;
+            if(pages[i].deleteRecord(tuple)) {
+                if (pages[i].isEmpty()) pages[i] = null;
+                return;
             }
         }
     }
@@ -48,6 +46,7 @@ public class Table {
             ObjWrapper obj = new ObjWrapper();
             int prevGap = -1;
             for(int i = 0; i < pagesSize; i++) {
+                if(pages[i] == null) continue;
                 if(obj.gapPage != prevGap) {
                     prevGap = i;
                     obj.gapPage = i;
@@ -72,6 +71,7 @@ public class Table {
         obj.gapPage = obj.gapRow = obj.newRow = -1;
         int prevGap = -1;
         for(int i = pagesSize - 1; i >= 0; i--) {
+            if(pages[i] == null) continue;
             pages[i].getLastGap(obj);
             if(obj.gapPage != prevGap) {
                 prevGap = obj.gapPage = i;
@@ -92,9 +92,9 @@ public class Table {
         int nMax = Page.getnMaxRows();
         if(obj.gapRow != -1 && obj.newRow != -1) {
             if(!obj.samePage)
-                obj.newPage--;
+                obj.newPage = getPrevPage(obj.newPage);
             int stRow = (obj.gapRow == nMax - 1 ? 0 : obj.gapRow + 1);
-            int stPage = (obj.gapRow == nMax - 1 ? obj.gapPage + 1 : obj.gapPage);
+            int stPage = (obj.gapRow == nMax - 1 ? getNextPage(obj.gapPage) : obj.gapPage);
             shiftUp(obj, stRow, stPage);
         }else if(obj.newRow != -1) {
             getNextGap(obj);
@@ -104,7 +104,7 @@ public class Table {
                 obj.gapPage = pagesSize - 1;
             }
             int stRow = (obj.gapRow == 0 ? nMax - 1 : obj.gapRow - 1);
-            int stPage = (obj.gapRow == 0 ? obj.gapPage - 1 : obj.gapPage);
+            int stPage = (obj.gapRow == 0 ? getPrevPage(obj.gapPage) : obj.gapPage);
             shiftDown(obj, stRow, stPage);
         }else if(obj.gapRow != -1) {
             boolean lastExists = getLastGap(obj);
@@ -118,9 +118,29 @@ public class Table {
         }
         pages[obj.newPage].insertRecord(obj.newRow, tuple);
     }
-
+    private int getPrevPage(int curPage) {
+        int newPage = -1;
+        for(int i = curPage - 1; i >= 0; i--) {
+            if(pages[i] != null) {
+                newPage = i;
+                break;
+            }
+        }
+        return newPage;
+    }
+    private int getNextPage(int curPage) {
+        int newPage = -1;
+        for(int i = curPage + 1; i < pagesSize; i++) {
+            if(pages[i] != null) {
+                newPage = i;
+                break;
+            }
+        }
+        return newPage;
+    }
     private void getNextGap(ObjWrapper obj) {
         for(int i = obj.newPage; i < pagesSize; i++) {
+            if(pages[i] == null) continue;
             if(pages[i].getNextGap(obj)) {
                 obj.gapPage = i;
                 break;
@@ -130,12 +150,11 @@ public class Table {
 
     private void insertLast(ObjWrapper obj) {
         int stRow = (obj.gapRow == Page.getnMaxRows() - 1 ? 0 : obj.gapRow + 1);
-        int stPage = (obj.gapRow == Page.getnMaxRows() - 1 ? obj.gapPage + 1 : obj.gapPage);
-        for(int i = Page.getnMaxRows() - 1; i >= 0; i--) {
-            if(!pages[i].isEmpty()) {
-                obj.newPage = i;
-                break;
-            }
+        int stPage = (obj.gapRow == Page.getnMaxRows() - 1 ? getNextPage(obj.gapPage) : obj.gapPage);
+        for(int i = pagesSize - 1; i >= 0; i--) {
+            if(pages[i] == null) continue;
+            obj.newPage = i;
+            break;
         }
         pages[obj.newPage].getLastRecord(obj);
         shiftUp(obj, stRow, stPage);
@@ -155,8 +174,9 @@ public class Table {
     private void shiftUp(ObjWrapper obj, int stRow, int stPage) {
         int nMax = Page.getnMaxRows();
         for(int i = stPage; i <= obj.newPage; i++) {
-            for(int j = (i == stPage ? stRow : 0); j <= (i == obj.newPage ? obj.newRow : pagesSize - 1); j++) {
-                int prevPage = (j == 0 ? i - 1 : i);
+            if(pages[i] == null) continue;
+            for(int j = (i == stPage ? stRow : 0); j <= (i == obj.newPage ? obj.newRow : nMax - 1); j++) {
+                int prevPage = (j == 0 ? getPrevPage(i) : i);
                 int prevRow = (j == 0 ? nMax - 1 : j - 1);
                 pages[prevPage].insertRecord(prevRow, pages[i].getTuple(j));
             }
@@ -164,12 +184,11 @@ public class Table {
     }
 
     private void shiftDown(ObjWrapper obj, int stRow, int stPage) {
-        if(obj.gapRow == -1)
-            insertInNewPage();
         int nMax = Page.getnMaxRows();
         for(int i = stPage; i >= obj.newPage; i--) {
+            if(pages[i] == null) continue;
             for(int j = (i == stPage ? stRow : nMax - 1); j >= (i == obj.newPage ? obj.newRow : 0); j--) {
-                int nextPage = (j == nMax - 1 ? i + 1 : i);
+                int nextPage = (j == nMax - 1 ? getNextPage(i) : i);
                 int nextRow = (j == nMax - 1 ? 0 : j + 1);
                 pages[nextPage].insertRecord(nextRow, pages[i].getTuple(j));
             }
