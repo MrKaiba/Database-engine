@@ -103,13 +103,13 @@ public class DBApp {
 	// following method is used to dump a whole table, i.e. all the rows 
 	// are printed to the screen. 
 	public void dumpTable( String strTable ) throws DBAppException{
-		
+		System.out.println(tables.get(strTable).toString());
 	}
 
 	// following method is used to dump a specific page in a specific 
 	// table. What is passed is the page index in the array.
 	public void dumpPage( String strTable, int nPageNumber ) throws DBAppException {
-		
+		System.out.println(tables.get(strTable).dumpPage(nPageNumber));
 	}
 
 	public static void main( String[] args ){
@@ -158,7 +158,15 @@ public class DBApp {
 			htblColNameValue.put("major", new String( "Pharma" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
+			dbApp.dumpTable(strTableName);
 
+			//An example if u want to delete a record.
+			htblColNameValue = new Hashtable( );
+			htblColNameValue.put("id", Integer.valueOf( 6 ));
+			htblColNameValue.put("major", new String( "Pharma" ) );
+			dbApp.deleteFromTable( strTableName , htblColNameValue );
+
+			dbApp.dumpPage(strTableName, 1);
 
 			strTableName = "Student";
 			htblColNameType = new Hashtable( );
@@ -197,6 +205,7 @@ public class DBApp {
 			htblColNameValue.put("gpa", Double.valueOf( 1.5 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 1 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
+
 
 			htblColNameValue.clear( );
 			htblColNameValue.put("id", Integer.valueOf( 5 ));

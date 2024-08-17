@@ -8,6 +8,24 @@ public class Table {
         this.pagesSize = 0;
     }
 
+    public String toString() {
+        String str = "";
+        for(int i = 0; i < pagesSize; i++) {
+            str += pages[i].toString() + "\n";
+        }
+        return str;
+    }
+    public String dumpPage(int index) {
+        String str = "Index out of bounds";
+        if(index >= 0 && index < pagesSize) {
+            str = "Null page";
+            if(pages[index] != null) {
+                str = pages[index].toString();
+            }
+        }
+        return str;
+    }
+
     private boolean validateRecord(Hashtable<String, Object> htblColNameValue, Hashtable<String,String> htblColNameType) {
 
         for (Map.Entry<String, Object> entry : htblColNameValue.entrySet()) {

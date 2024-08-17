@@ -20,7 +20,7 @@ public class Page {
             if(tuples[i] == null) continue;
             str += tuples[i].toString() + ",";
         }
-        return str;
+        return str.substring(0, str.length() - 1);
     }
 
     public boolean tupleFound(String clusteringKey, Tuple tuple, ObjWrapper obj) {
