@@ -1,3 +1,5 @@
+import java.util.Map;
+
 public class Page {
     private static int nMaxRows;
     private Tuple[] tuples;
@@ -11,6 +13,15 @@ public class Page {
     public static int getnMaxRows() {
         return Page.nMaxRows;
     }
+
+    public String toString() {
+        String str = "";
+        for (int i = 0; i < nMaxRows; i++) {
+            str += tuples[i].toString() + ",";
+        }
+        return str.substring(0, str.length() - 1);
+    }
+
     public boolean tupleFound(String clusteringKey, Tuple tuple, ObjWrapper obj) {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) {

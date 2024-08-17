@@ -1,4 +1,5 @@
 import java.util.Hashtable;
+import java.util.Map;
 
 public class Tuple {
     Hashtable<String, Object> tuple;
@@ -15,5 +16,11 @@ public class Tuple {
         Comparable<Object> comparableThisValue = (Comparable<Object>) thisValue;
         return comparableThisValue.compareTo(otherValue) >= 0;
     }
-
+    public String toString() {
+        String str = "";
+        for (Map.Entry<String, Object> entry : this.tuple.entrySet()) {
+            str += entry.getValue() + ",";
+        }
+        return str.substring(0, str.length() - 1);
+    }
 }
