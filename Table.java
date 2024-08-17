@@ -48,8 +48,9 @@ public class Table {
             for(int i = 0; i < pagesSize; i++) {
                 if(pages[i] == null) continue;
                 if(obj.gapPage != prevGap) {
-                    prevGap = i;
-                    obj.gapPage = i;
+                    int tempPrevGap = getPrevPage(i);
+                    prevGap = tempPrevGap;
+                    obj.gapPage = tempPrevGap;
                 }
                 if(pages[i].tupleFound(strClusteringKey, tuple, obj)) {
                     if(obj.gapPage != prevGap) {
