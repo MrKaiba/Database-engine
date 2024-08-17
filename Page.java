@@ -18,7 +18,7 @@ public class Page {
         String str = "";
         for (int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) continue;
-            str += tuples[i].toString() + "\n";
+            str += tuples[i].toString() + ",";
         }
         return str;
     }

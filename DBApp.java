@@ -158,18 +158,9 @@ public class DBApp {
 			htblColNameValue.put("major", new String( "Pharma" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
-			System.out.println(dbApp.tables.get("Major").toString());
-
-			htblColNameValue = new Hashtable( );
-			htblColNameValue.put("id", Integer.valueOf( 4 ));
-			htblColNameValue.put("major", new String( "IET" ) );
-			dbApp.deleteFromTable(strTableName, htblColNameValue);
-
-		    System.out.println(dbApp.tables.get("Major").toString());
 
 
-
-		strTableName = "Student";
+			strTableName = "Student";
 			htblColNameType = new Hashtable( );
 			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("name", "java.lang.String");
