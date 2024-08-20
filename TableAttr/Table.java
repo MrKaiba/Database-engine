@@ -1,11 +1,31 @@
+package TableAttr;
 import java.util.Hashtable;
 import java.util.Map;
+import BTree.*;
+
 
 public class Table {
     private int pagesSize;
     private Page[] pages;
+    private Hashtable<String, BTree> indices;
+
     public Table() {
         this.pagesSize = 0;
+    }
+
+    public void createIndex(String colName) {
+        if (indices == null) {
+            indices = new Hashtable<>();
+        }
+        BTree btree = new BTree();
+        indices.put(colName, btree);
+        for(int i = 0; i < pagesSize; i++) {
+            if(pages[i] == null) continue;
+            pages[i].insertAllTuples(colName, btree);
+        }
+        //testing
+        DBBTreeIterator<Integer, Integer> iterator = new DBBTreeIterator(btree);
+        iterator.print();
     }
 
     public String toString() {
@@ -48,6 +68,7 @@ public class Table {
 
     public void deleteRecord(Hashtable<String,Object> htblColNameValue) {
         Tuple tuple = new Tuple(htblColNameValue);
+        deleteFromBTree(tuple);
         for(int i = 0; i < pagesSize; i++) {
             if(pages[i] == null) continue;
             if(pages[i].deleteRecord(tuple)) {
@@ -59,8 +80,9 @@ public class Table {
 
     public void insertRecord(String strClusteringKey, Hashtable<String,Object> htblColNameValue,
                              Hashtable<String,String> htblColNameType) {
-        if(validateRecord(htblColNameValue, htblColNameType)) {
-            Tuple tuple = new Tuple(htblColNameValue);
+        Hashtable<String, Object> colNameValue = new Hashtable<>(htblColNameValue);
+        if(validateRecord(colNameValue, htblColNameType)) {
+            Tuple tuple = new Tuple(colNameValue);
             ObjWrapper obj = new ObjWrapper();
             int prevGap = -1;
             for(int i = 0; i < pagesSize; i++) {
@@ -78,9 +100,32 @@ public class Table {
                     break;
                 }
             }
+            insertInBTree(tuple);
             insert(obj, tuple);
         }else {
-            System.out.println("Invalid Type");
+            System.out.println("Invalid Record");
+        }
+    }
+
+    private void insertInBTree(Tuple tuple) {
+        if(indices == null) return;
+        Hashtable<String, Object> tupleHash = tuple.getTuple();
+        for(Map.Entry<String, Object> entry : tupleHash.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if(indices.contains(key))
+                indices.get(key).insert((Comparable)value, tuple);
+        }
+    }
+
+    private void deleteFromBTree(Tuple tuple) {
+        if(indices == null) return;
+        Hashtable<String, Object> tupleHash = tuple.getTuple();
+        for(Map.Entry<String, Object> entry : tupleHash.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if(indices.contains(key))
+                indices.get(key).delete((Comparable)value, tuple);
         }
     }
 
@@ -137,6 +182,7 @@ public class Table {
         }
         pages[obj.newPage].insertRecord(obj.newRow, tuple);
     }
+
     private int getPrevPage(int curPage) {
         int newPage = -1;
         for(int i = curPage - 1; i >= 0; i--) {

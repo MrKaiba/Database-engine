@@ -1,4 +1,6 @@
-import java.util.Map;
+package TableAttr;
+import BTree.*;
+
 
 public class Page {
     private static int nMaxRows;
@@ -48,6 +50,13 @@ public class Page {
             }
         }
         return false;
+    }
+    public void insertAllTuples(String colName, BTree btree) {
+        for(int i = 0; i < nMaxRows; i++) {
+            if(tuples[i] == null) continue;
+            //safe casting since it's already validated when inserted to table
+            btree.insert((Comparable)tuples[i].getColValue(colName), tuples[i]);
+        }
     }
     public Tuple getTuple(int index) {
         return tuples[index];

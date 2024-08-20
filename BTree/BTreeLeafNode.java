@@ -1,6 +1,7 @@
 package BTree;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author mohamed
@@ -10,31 +11,52 @@ class BTreeLeafNode<TKey extends Comparable<TKey>, TValue> extends BTreeNode<TKe
 	/**
 	 * @uml.property name="values"
 	 */
-	private final Object[] values;
+	private final List<TValue>[] values;
+
 	/**
 	 * @uml.property name="filters"
 	 * @uml.associationEnd multiplicity="(0 -1)" elementType="java.lang.Boolean"
 	 */
 	private ArrayList<Boolean> filters;
 
+	private BTreeLeafNode<TKey, TValue> next;
+
 	public BTreeLeafNode() {
 		this.filters = new ArrayList<>();
 		this.keys = new Object[LEAFORDER + 1];
-		this.values = new Object[LEAFORDER + 1];
+		this.values = new ArrayList[LEAFORDER + 1];
+		for (int i = 0; i < this.values.length; i++) {
+			this.values[i] = new ArrayList<>();
+		}
+		this.next = null;
 	}
+
 
 	public BTreeLeafNode(BTreeLeafNode smallest) {
 		this.keys = smallest.keys;
 		this.values = smallest.values;
+		this.next = null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public TValue getValue(int index) {
-		return (TValue) this.values[index];
+	public BTreeLeafNode<TKey, TValue> getNext() {
+		return this.next;
+	}
+
+	public void setNext(BTreeLeafNode<TKey, TValue> next) {
+		this.next = next;
+	}
+
+	public List<TValue> getValue(int index) {
+		return this.values[index];
 	}
 
 	public void setValue(int index, TValue value) {
-		this.values[index] = value;
+		List<TValue> valueList = (List<TValue>) this.values[index];
+		if (valueList == null) {
+			valueList = new ArrayList<>();
+			this.values[index] = valueList;
+		}
+		valueList.add(value);
 	}
 
 	@Override
@@ -75,15 +97,22 @@ class BTreeLeafNode<TKey extends Comparable<TKey>, TValue> extends BTreeNode<TKe
 	}
 
 	private void insertAt(int index, TKey key, TValue value) {
-		// move space for the new key
-		for (int i = this.getKeyCount() - 1; i >= index; --i) {
-			this.setKey(i + 1, this.getKey(i));
-			this.setValue(i + 1, this.getValue(i));
+		// If the key already exists, add the value to the existing list
+		if (index < this.getKeyCount() && this.getKey(index).compareTo(key) == 0) {
+			this.values[index].add(value);
+			return;
 		}
 
-		// insert new key and value
+		// Move space for the new key
+		for (int i = this.getKeyCount() - 1; i >= index; --i) {
+			this.setKey(i + 1, this.getKey(i));
+			this.values[i + 1] = this.values[i];
+		}
+
+		// Insert new key and value
 		this.setKey(index, key);
-		this.setValue(index, value);
+		this.values[index] = new ArrayList<>();
+		this.values[index].add(value);
 		++this.keyCount;
 	}
 
@@ -96,17 +125,28 @@ class BTreeLeafNode<TKey extends Comparable<TKey>, TValue> extends BTreeNode<TKe
 		int midIndex = this.getKeyCount() / 2;
 
 		BTreeLeafNode<TKey, TValue> newRNode = new BTreeLeafNode<TKey, TValue>();
+
 		for (int i = midIndex; i < this.getKeyCount(); ++i) {
 			newRNode.setKey(i - midIndex, this.getKey(i));
-			newRNode.setValue(i - midIndex, this.getValue(i));
+
+			List<TValue> valueList = this.getValue(i);
+			for (TValue value : valueList) {
+				newRNode.setValue(i - midIndex, value);
+			}
+
 			this.setKey(i, null);
-			this.setValue(i, null);
+			this.values[i] = new ArrayList<>();
 		}
+
 		newRNode.keyCount = this.getKeyCount() - midIndex;
 		this.keyCount = midIndex;
 
+		newRNode.setNext(this.getNext());
+		this.setNext(newRNode);
+
 		return newRNode;
 	}
+
 
 	@Override
 	protected BTreeNode<TKey> pushUpKey(TKey key, BTreeNode<TKey> leftChild, BTreeNode<TKey> rightNode) {
@@ -124,16 +164,30 @@ class BTreeLeafNode<TKey extends Comparable<TKey>, TValue> extends BTreeNode<TKe
 		return true;
 	}
 
-	private void deleteAt(int index) {
-		int i = index;
-		for (i = index; i < this.getKeyCount() - 1; ++i) {
-			this.setKey(i, this.getKey(i + 1));
-			this.setValue(i, this.getValue(i + 1));
+	public boolean delete(TKey key, TValue value) {
+		int index = this.search(key);
+		if (index == -1) return false;
+
+		List<TValue> valueList = this.values[index];
+		valueList.remove(value);
+		if (valueList.isEmpty()) {
+			this.deleteAt(index);
 		}
-		this.setKey(i, null);
-		this.setValue(i, null);
+		return true;
+	}
+
+
+	private void deleteAt(int index) {
+		for (int i = index; i < this.getKeyCount() - 1; ++i) {
+			this.setKey(i, this.getKey(i + 1));
+			this.values[i] = this.values[i + 1];
+		}
+
+		this.setKey(this.getKeyCount() - 1, null);
+		this.values[this.getKeyCount() - 1] = new ArrayList<>();
 		--this.keyCount;
 	}
+
 
 	@Override
 	protected void processChildrenTransfer(BTreeNode<TKey> borrower, BTreeNode<TKey> lender, int borrowIndex) {
@@ -156,25 +210,34 @@ class BTreeLeafNode<TKey extends Comparable<TKey>, TValue> extends BTreeNode<TKe
 		int j = this.getKeyCount();
 		for (int i = 0; i < siblingLeaf.getKeyCount(); ++i) {
 			this.setKey(j + i, siblingLeaf.getKey(i));
-			this.setValue(j + i, siblingLeaf.getValue(i));
+
+			for (TValue value : siblingLeaf.getValue(i)) {
+				this.setValue(j + i, value);
+			}
 		}
 		this.keyCount += siblingLeaf.getKeyCount();
 
 		this.setRightSibling(siblingLeaf.rightSibling);
 		if (siblingLeaf.rightSibling != null)
 			siblingLeaf.rightSibling.setLeftSibling(this);
+
+		this.setNext(siblingLeaf.getNext());
 	}
+
 
 	@Override
 	@SuppressWarnings("unchecked")
 	protected TKey transferFromSibling(TKey sinkKey, BTreeNode<TKey> sibling, int borrowIndex) {
 		BTreeLeafNode<TKey, TValue> siblingNode = (BTreeLeafNode<TKey, TValue>) sibling;
 
-		this.insertKey(siblingNode.getKey(borrowIndex), siblingNode.getValue(borrowIndex));
+		for (TValue value : siblingNode.getValue(borrowIndex)) {
+			this.insertKey(siblingNode.getKey(borrowIndex), value);
+		}
 		siblingNode.deleteAt(borrowIndex);
 
 		return borrowIndex == 0 ? sibling.getKey(0) : this.getKey(0);
 	}
+
 
 	@Override
 	public String commit() {

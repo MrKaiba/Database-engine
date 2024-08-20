@@ -1,6 +1,7 @@
 
-/** * @author Wael Abouelsaadat */ 
+/** * @author Wael Abouelsaadat */
 
+import TableAttr.*;
 import java.util.Iterator;
 import java.util.Hashtable;
 
@@ -58,9 +59,10 @@ public class DBApp {
 	public void createIndex(String strTableName,
 							String strColName,
 							String strIndexName) throws DBAppException {
-								
-
+		Table table = tables.get(strTableName);
+		table.createIndex(strColName);
 	}
+
 
 	// following method inserts one row only.
 	// htblColNameValue must include a value for the primary key
@@ -160,7 +162,7 @@ public class DBApp {
 
 			dbApp.dumpTable(strTableName);
 
-			//An example if u want to delete a record.
+			//delete a record.
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 6 ));
 			htblColNameValue.put("major", new String( "Pharma" ) );
@@ -206,14 +208,13 @@ public class DBApp {
 			htblColNameValue.put("majorID", Integer.valueOf( 1 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
-
 			htblColNameValue.clear( );
 			htblColNameValue.put("id", Integer.valueOf( 5 ));
 			htblColNameValue.put("name", new String("Zaky Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 0.88 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 2 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
-			
+
 			// Note: any number of tables could be joined together.
 			String[] strTables;
 			strTables = new String[2];
@@ -226,5 +227,4 @@ public class DBApp {
 			exp.printStackTrace( );
 		}
 	}
-
 }

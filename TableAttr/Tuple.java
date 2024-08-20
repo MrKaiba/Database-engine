@@ -1,3 +1,5 @@
+package TableAttr;
+
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -6,8 +8,14 @@ public class Tuple {
     public Tuple(Hashtable<String, Object> tuple) {
         this.tuple = tuple;
     }
+    public Hashtable<String, Object> getTuple() {
+        return this.tuple;
+    }
     public boolean isSame(Tuple tuple) {
         return this.tuple.equals(tuple.tuple);
+    }
+    public Object getColValue(String colName) {
+        return this.tuple.get(colName);
     }
     public boolean compare(String clusteringKey, Tuple otherTuple) {
         Object thisValue = this.tuple.get(clusteringKey);

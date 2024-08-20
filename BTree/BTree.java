@@ -1,6 +1,7 @@
 package BTree;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A B+ tree Since the structures and behaviors between internal node and
@@ -42,12 +43,12 @@ public class BTree<TKey extends Comparable<TKey>, TValue> {
     /**
      * Search a key value on the tree and return its associated value.
      */
-    public TValue search(TKey key) {
+    public List<TValue> search(TKey key) {
         BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
-
         int index = leaf.search(key);
         return (index == -1) ? null : leaf.getValue(index);
     }
+
 
     /**
      * Delete a key and its associated value from the tree.
@@ -58,6 +59,16 @@ public class BTree<TKey extends Comparable<TKey>, TValue> {
         if (leaf.delete(key) && leaf.isUnderflow()) {
             BTreeNode<TKey> n = leaf.dealUnderflow();
             if (n != null)
+                this.root = n;
+        }
+    }
+
+    public void delete(TKey key, TValue value) {
+        BTreeLeafNode<TKey, TValue> leaf = this.findLeafNodeShouldContainKey(key);
+
+        if(leaf.delete(key, value) && leaf.isUnderflow()) {
+            BTreeNode<TKey> n = leaf.dealUnderflow();
+            if(n != null)
                 this.root = n;
         }
     }

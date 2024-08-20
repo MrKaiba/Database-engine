@@ -1,3 +1,5 @@
+package TableAttr;
+
 public class ObjWrapper {
     int newRow;
     int newPage;
