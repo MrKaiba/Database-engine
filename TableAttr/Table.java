@@ -13,9 +13,17 @@ public class Table {
         this.pagesSize = 0;
     }
 
+    public static void setnMaxRows(int nMaxRows) {
+        Page.setnMaxRows(nMaxRows);
+    }
+
     public void createIndex(String colName) {
         if (indices == null) {
             indices = new Hashtable<>();
+        }
+        if(indices.containsKey(colName)) {
+            System.out.println("Index already exists");
+            return;
         }
         BTree btree = new BTree();
         indices.put(colName, btree);
@@ -46,14 +54,31 @@ public class Table {
         return str;
     }
 
-    private boolean validateRecord(Hashtable<String, Object> htblColNameValue, Hashtable<String,String> htblColNameType) {
-
+    private boolean validateRecord(Hashtable<String, Object> htblColNameValue, String strClusteringKey, Hashtable<String,String> htblColNameType) {
+        if(htblColNameValue == null) {
+            System.out.println("Insertion failed: null record");
+            return false;
+        }
         for (Map.Entry<String, Object> entry : htblColNameValue.entrySet()) {
             if(!isTypeMatching(entry.getValue(), htblColNameType.get(entry.getKey()))) {
-               return false;
+                return false;
             }
         }
+        if(tuplePrimaryExists(strClusteringKey, htblColNameValue.get(strClusteringKey))) {
+            System.out.println("Insertion failed: duplicate primary key");
+            return false;
+        }
         return true;
+    }
+
+    private boolean tuplePrimaryExists(String clusteringKey, Object tupleClusteringKey) {
+        for(int i = 0; i < pagesSize; i++) {
+            if(pages[i] == null) continue;
+            if(pages[i].containsPrimary(clusteringKey, tupleClusteringKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isTypeMatching(Object value, String expectedType) {
@@ -81,7 +106,7 @@ public class Table {
     public void insertRecord(String strClusteringKey, Hashtable<String,Object> htblColNameValue,
                              Hashtable<String,String> htblColNameType) {
         Hashtable<String, Object> colNameValue = new Hashtable<>(htblColNameValue);
-        if(validateRecord(colNameValue, htblColNameType)) {
+        if(validateRecord(colNameValue, strClusteringKey, htblColNameType)) {
             Tuple tuple = new Tuple(colNameValue);
             ObjWrapper obj = new ObjWrapper();
             int prevGap = -1;

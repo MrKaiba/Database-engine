@@ -88,6 +88,15 @@ public class Page {
         }
         return false;
     }
+    public boolean containsPrimary(String clusteringKey, Object tupleClusteringKey) {
+        for(int i = 0; i < nMaxRows; i++) {
+            if(tuples[i] == null) continue;
+            if(tuples[i].getColValue(clusteringKey).equals(tupleClusteringKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
     public boolean isEmpty() {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] != null) return false;
