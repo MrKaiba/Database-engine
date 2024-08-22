@@ -21,10 +21,6 @@ public class Table {
         if (indices == null) {
             indices = new Hashtable<>();
         }
-        if(indices.containsKey(colName)) {
-            System.out.println("Index already exists");
-            return;
-        }
         BTree btree = new BTree();
         indices.put(colName, btree);
         for(int i = 0; i < pagesSize; i++) {
@@ -32,7 +28,9 @@ public class Table {
             pages[i].insertAllTuples(colName, btree);
         }
     }
-
+    public boolean checkIndex(String colName) {
+         return (indices != null && indices.containsKey(colName));
+    }
     public String toString() {
         String str = "";
         for(int i = 0; i < pagesSize; i++) {
@@ -52,19 +50,17 @@ public class Table {
     }
 
     private boolean validateRecord(Hashtable<String, Object> htblColNameValue, String strClusteringKey, Hashtable<String,String> htblColNameType) {
-        if(htblColNameValue == null) {
-            System.out.println("Insertion failed: null record");
+        if(htblColNameValue == null)
             return false;
-        }
         for (Map.Entry<String, Object> entry : htblColNameValue.entrySet()) {
-            if(!isTypeMatching(entry.getValue(), htblColNameType.get(entry.getKey()))) {
+            if(!isTypeMatching(entry.getValue(), htblColNameType.get(entry.getKey())))
                 return false;
-            }
         }
-        if(tuplePrimaryExists(strClusteringKey, htblColNameValue.get(strClusteringKey))) {
-            System.out.println("Insertion failed: duplicate primary key");
+        if(htblColNameValue.get(strClusteringKey) == null)
             return false;
-        }
+        if(tuplePrimaryExists(strClusteringKey, htblColNameValue.get(strClusteringKey)))
+            return false;
+
         return true;
     }
 
@@ -100,7 +96,7 @@ public class Table {
         }
     }
 
-    public void insertRecord(String strClusteringKey, Hashtable<String,Object> htblColNameValue,
+    public boolean insertRecord(String strClusteringKey, Hashtable<String,Object> htblColNameValue,
                              Hashtable<String,String> htblColNameType) {
         Hashtable<String, Object> colNameValue = new Hashtable<>(htblColNameValue);
         if(validateRecord(colNameValue, strClusteringKey, htblColNameType)) {
@@ -124,8 +120,9 @@ public class Table {
             }
             insertInBTree(tuple);
             insert(obj, tuple);
+            return true;
         }else {
-            System.out.println("Invalid Record");
+            return false;
         }
     }
 
@@ -342,5 +339,13 @@ public class Table {
     private BTree getBTree(String colName) {
         if(indices == null || !indices.containsKey(colName)) return null;
         return indices.get(colName);
+    }
+    public boolean containsVal(Object value, String colName) {
+        for(int i = 0; i < pagesSize; i++) {
+            if(pages[i] == null) continue;
+            Tuple foundTuple = pages[i].foundTuple(colName, value);
+            if(foundTuple != null) return true;
+        }
+        return false;
     }
 }

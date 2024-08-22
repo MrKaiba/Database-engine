@@ -103,7 +103,8 @@ public class Page {
     public Tuple foundTuple(String colName, Object value) {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) continue;
-            if(tuples[i].getColValue(colName).equals(value)) {
+            Object obj = tuples[i].getColValue(colName);
+            if(obj != null && obj.equals(value)) {
                 return tuples[i];
             }
         }

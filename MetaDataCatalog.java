@@ -18,7 +18,7 @@ public class MetaDataCatalog {
                                  String strClusteringKeyColumn, String strReferencedTable, String strReferencedColumn,
                                  String strReferencingColumn) {
         MetaData metaData = new MetaData();
-        metaData.htblColNameType = htblColNameType;
+        metaData.htblColNameType = new Hashtable<>(htblColNameType);
         metaData.strClusteringKeyColumn = strClusteringKeyColumn;
         metaData.strReferencedTable = strReferencedTable;
         metaData.strReferencedColumn = strReferencedColumn;
