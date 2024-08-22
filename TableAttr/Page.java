@@ -109,19 +109,19 @@ public class Page {
         }
         return null;
     }
-    public void join(Table otherTable, ArrayList<Tuple> tuplesList, BTree otherBTree, String referencingCol) {
+    public void join(Table otherTable, ArrayList<Tuple> tuplesList, BTree otherBTree, String referencedCol, String referencingCol) {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) continue;
             Object value = tuples[i].getColValue(referencingCol);
             if(otherBTree == null) {
-                Tuple otherTuple = otherTable.findTuple(referencingCol, value);
+                Tuple otherTuple = otherTable.findTuple(referencedCol, value);
                 if(otherTuple == null) continue;
-                tuplesList.add(tuples[i].joinTuples(otherTuple));
+                tuplesList.add(tuples[i].joinTuples(otherTuple, referencedCol));
                 continue;
             }
             List<Tuple> otherTuple = otherBTree.search((Comparable)value);
             if(otherTuple == null) continue;
-            tuplesList.add(tuples[i].joinTuples(otherTuple.getFirst()));
+            tuplesList.add(tuples[i].joinTuples(otherTuple.getFirst(), referencedCol));
         }
     }
 

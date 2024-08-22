@@ -304,6 +304,7 @@ public class Table {
 
     private void BTreeJoin(Table otherTable, ArrayList<Tuple> tuples, String referencedCol, String referencingCol, Iterator iterator) {
         BTree otherBTree = otherTable.getBTree(referencedCol);
+        ArrayList<Tuple> addedTuples = new ArrayList<>();
 
         while(iterator.hasNext()) {
             Tuple tuple = (Tuple)iterator.next();
@@ -311,20 +312,22 @@ public class Table {
             if(otherBTree == null) {
                 Tuple otherTuple = otherTable.findTuple(referencedCol, value);
                 if(otherTuple == null) continue;
-                tuples.add(tuple.joinTuples(otherTuple));
+                addedTuples.add(tuple.joinTuples(otherTuple, referencedCol));
                 continue;
             }
             List<Tuple> otherTuple = otherBTree.search((Comparable)value);
             if(otherTuple == null) continue;
-            tuples.add(tuple.joinTuples(otherTuple.getFirst()));
+            addedTuples.add(tuple.joinTuples(otherTuple.getFirst(), referencedCol));
         }
+        tuples.clear();
+        tuples.addAll(addedTuples);
     }
 
     private void linearJoin(Table otherTable, ArrayList<Tuple> tuples, String referencedCol, String referencingCol) {
         BTree otherBTree = otherTable.getBTree(referencedCol);
         for(int i = 0; i < pagesSize; i++) {
             if(pages[i] == null) continue;
-            pages[i].join(otherTable, tuples, otherBTree, referencingCol);
+            pages[i].join(otherTable, tuples, otherBTree, referencedCol, referencingCol);
         }
     }
 

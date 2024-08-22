@@ -155,6 +155,7 @@ public class DBApp {
 			for (int i = 0; i < modTableNames.length; i++) {
 				if (modTableNames[i].second != null && modTableNames[i].second.equals(search)) {
 					sortedTables[index] = modTableNames[i].first;
+					search = sortedTables[index];
 					index--;
 				}
 			}
@@ -195,22 +196,26 @@ public class DBApp {
 			htblColNameType = new Hashtable( );
 			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("major", "java.lang.String");
-			dbApp.createTable( strTableName, htblColNameType, "id", null, null, null );
-			dbApp.createIndex( strTableName, "id", "major_id_Index" );
+			htblColNameType.put("depID", "java.lang.Integer");
+			dbApp.createTable( strTableName, htblColNameType, "id", "Department", "id", "depID" );
+			//dbApp.createIndex( strTableName, "id", "major_id_Index" );
 
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 1 ));
 			htblColNameValue.put("major", new String( "CSEN" ) );
+			htblColNameValue.put("depID", Integer.valueOf( 1 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 2 ));
 			htblColNameValue.put("major", new String( "DMET" ) );
+			htblColNameValue.put("depID", Integer.valueOf( 2 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 3 ));
 			htblColNameValue.put("major", new String( "BI" ) );
+			htblColNameValue.put("depID", Integer.valueOf( 3 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue = new Hashtable( );
@@ -228,66 +233,115 @@ public class DBApp {
 			htblColNameValue.put("major", new String( "Pharma" ) );
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
-			dbApp.dumpTable(strTableName);
+			//dbApp.dumpTable(strTableName);
 
 			//delete a record.
-			htblColNameValue = new Hashtable( );
-			htblColNameValue.put("id", Integer.valueOf( 6 ));
-			htblColNameValue.put("major", new String( "Pharma" ) );
-			dbApp.deleteFromTable( strTableName , htblColNameValue );
+			//htblColNameValue = new Hashtable( );
+			//htblColNameValue.put("id", Integer.valueOf( 6 ));
+			//htblColNameValue.put("major", new String( "Pharma" ) );
+			//dbApp.deleteFromTable( strTableName , htblColNameValue );
 
-			dbApp.dumpPage(strTableName, 1);
+			//dbApp.dumpPage(strTableName, 1);
 
 			strTableName = "Student";
 			htblColNameType = new Hashtable( );
-			htblColNameType.put("sid", "java.lang.Integer");
+			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("name", "java.lang.String");
 			htblColNameType.put("gpa", "java.lang.Double");
 			htblColNameType.put("majorID", "java.lang.Integer");
-			dbApp.createTable( strTableName, htblColNameType, "sid", "Major","id", "majorID" );
-			dbApp.createIndex( strTableName, "sid", "student_id_Index" );
-			dbApp.createIndex( strTableName, "gpa", "student_gpa_Index" );
+			dbApp.createTable( strTableName, htblColNameType, "id", "Major","id", "majorID" );
+			//dbApp.createIndex( strTableName, "name", "student_id_Index" );
+			//dbApp.createIndex( strTableName, "gpa", "student_gpa_Index" );
 
 			htblColNameValue = new Hashtable( );
-			htblColNameValue.put("sid", Integer.valueOf( 1 ));
+			htblColNameValue.put("id", Integer.valueOf( 1 ));
 			htblColNameValue.put("name", new String("Ahmed Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 0.95 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 1 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("sid", Integer.valueOf( 2 ));
+			htblColNameValue.put("id", Integer.valueOf( 2 ));
 			htblColNameValue.put("name", new String("Ahmed Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 0.95 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 2 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("sid", Integer.valueOf( 3 ));
+			htblColNameValue.put("id", Integer.valueOf( 3 ));
 			htblColNameValue.put("name", new String("Dalia Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 1.25 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 3 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("sid", Integer.valueOf( 4 ));
+			htblColNameValue.put("id", Integer.valueOf( 4 ));
 			htblColNameValue.put("name", new String("John Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 1.5 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 1 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("sid", Integer.valueOf( 5 ));
+			htblColNameValue.put("id", Integer.valueOf( 5 ));
 			htblColNameValue.put("name", new String("Zaky Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 0.88 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 2 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
+			strTableName = "Department";
+			htblColNameType = new Hashtable<>();
+			htblColNameType.put("id", "java.lang.Integer");
+			htblColNameType.put("departmentName", "java.lang.String");
+			htblColNameType.put("cID", "java.lang.Integer");
+			dbApp.createTable(strTableName, htblColNameType, "id", "Course", "courseID", "cID");
+
+			// Inserting data into Department table
+			htblColNameValue = new Hashtable<>();
+			htblColNameValue.put("id", 1);
+			htblColNameValue.put("departmentName", "Engineering");
+			htblColNameValue.put("cID", 101);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("id", 2);
+			htblColNameValue.put("departmentName", "Medical Sciences");
+			htblColNameValue.put("cID", 102);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("id", 3);
+			htblColNameValue.put("departmentName", "Business Administration");
+			htblColNameValue.put("cID", 201);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			strTableName = "Course";
+			htblColNameType = new Hashtable<>();
+			htblColNameType.put("courseID", "java.lang.Integer");
+			htblColNameType.put("courseName", "java.lang.String");
+			dbApp.createTable(strTableName, htblColNameType, "courseID", null, null, null);
+
+			// Inserting data into Course table
+			htblColNameValue = new Hashtable<>();
+			htblColNameValue.put("courseID", 101);
+			htblColNameValue.put("courseName", "Data Structures");
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("courseID", 102);
+			htblColNameValue.put("courseName", "Digital Design");
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("courseID", 201);
+			htblColNameValue.put("courseName", "Biochemistry");
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
 			// Note: any number of tables could be joined together.
 			String[] strTables;
-			strTables = new String[2];
+			strTables = new String[4];
 			strTables[0]  = "Major";
 			strTables[1]  = "Student";
+			strTables[2] = "Department";
+			strTables[3] = "Course";
 			Iterator it = dbApp.join( strTables );
 			while(it.hasNext( )) {
 				System.out.println(it.next());

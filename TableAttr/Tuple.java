@@ -24,10 +24,20 @@ public class Tuple {
         Comparable<Object> comparableThisValue = (Comparable<Object>) thisValue;
         return comparableThisValue.compareTo(otherValue) >= 0;
     }
-    public Tuple joinTuples(Tuple otherTuple) {
+    public Tuple joinTuples(Tuple otherTuple, String ignoredCol) {
         Hashtable<String, Object> tupleHash = new Hashtable(this.tuple);
         for(Map.Entry<String, Object> entry : otherTuple.getTuple().entrySet()) {
-            tupleHash.put(entry.getKey(), entry.getValue());
+            String key = entry.getKey();
+            if(key.equals(ignoredCol)) continue;
+            int num = 1;
+            while(tupleHash.containsKey(key)) {
+                if(num != 1) {
+                    key = key.substring(0, key.length() - 1);
+                }
+                key += num;
+                num++;
+            }
+            tupleHash.put(key, entry.getValue());
         }
         Tuple newTuple = new Tuple(tupleHash);
         return newTuple;
