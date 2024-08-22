@@ -5,6 +5,7 @@ import TableAttr.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Hashtable;
+import java.util.Map;
 
 
 public class DBApp {
@@ -51,11 +52,36 @@ public class DBApp {
 			System.out.println("Table " + strTableName + " already exists");
 			return;
 		}
+		validateTable(htblColNameType, strReferencedTable, strReferencedColumn, strReferencingColumn);
+
 		metaDataCatalog.addTableMetaData(strTableName, htblColNameType, strClusteringKeyColumn,
 				strReferencedTable, strReferencedColumn, strReferencingColumn);
 
 		Table table = new Table();
 		tables.put(strTableName, table);
+	}
+
+	private void validateTable(  Hashtable<String,String> htblColNameType,
+								 String strReferencedTable,
+								 String strReferencedColumn,
+								 String strReferencingColumn ) throws DBAppException {
+		if(strReferencedColumn != null && strReferencedTable != null && strReferencingColumn != null) {
+
+			if (!tables.containsKey(strReferencedTable)) {
+				throw new DBAppException("Table " + strReferencedTable + " does not exist");
+			}
+			Hashtable<String, String> refHashTable = metaDataCatalog.gethtblColNameType(strReferencedTable);
+			if (!refHashTable.containsKey(strReferencedColumn)) {
+				throw new DBAppException("Column " + strReferencedColumn + " does not exist");
+			}
+			String curDataType = htblColNameType.get(strReferencingColumn);
+			String otherDataType = refHashTable.get(strReferencedColumn);
+			if (!curDataType.equals(otherDataType)) {
+				throw new DBAppException("Column " + strReferencingColumn + " does not match");
+			}
+		}else if(!(strReferencedColumn == null && strReferencedTable == null && strReferencingColumn == null)){
+			throw new DBAppException("Parameters don't match");
+		}
 	}
 
 
@@ -64,7 +90,13 @@ public class DBApp {
 	public void createIndex(String strTableName,
 							String strColName,
 							String strIndexName) throws DBAppException {
+		if(!tables.containsKey(strTableName))
+			throw new DBAppException("Table " + strTableName + " does not exist");
 		Table table = tables.get(strTableName);
+		if(!metaDataCatalog.gethtblColNameType(strTableName).containsKey(strColName))
+			throw new DBAppException("Column " + strColName + " does not exist");
+		if(table.checkIndex(strColName))
+			throw new DBAppException("Index already exists");
 		table.createIndex(strColName);
 	}
 
@@ -76,10 +108,13 @@ public class DBApp {
 	public void insertIntoTable(String strTableName,
 								Hashtable<String,Object> htblColNameValue)
 			throws DBAppException{
+		if(!tables.containsKey(strTableName))
+			throw new DBAppException("Table " + strTableName + " does not exist");
 		Table table = tables.get(strTableName);
 		String clusteringKey = metaDataCatalog.getClusteringKeyColumn(strTableName);
 		Hashtable<String, String>htblColNameType = metaDataCatalog.gethtblColNameType(strTableName);
-		table.insertRecord(clusteringKey, htblColNameValue, htblColNameType);
+		if(!table.insertRecord(clusteringKey, htblColNameValue, htblColNameType))
+			throw new DBAppException("Insertion failed due to invalid record");
 	}
 
 
@@ -93,7 +128,20 @@ public class DBApp {
 	public void deleteFromTable(String strTableName,
 								Hashtable<String,Object> htblColNameValue)
 			throws DBAppException{
+		if(!tables.containsKey(strTableName))
+			throw new DBAppException("Table " + strTableName + " does not exist");
 		Table table = tables.get(strTableName);
+		for(Map.Entry<String, Table> entry : tables.entrySet()) {
+			String key = entry.getKey();
+			if(key.equals(strTableName) || metaDataCatalog.getReferencedTable(key) == null) continue;
+			Table otherTable = entry.getValue();
+			if(metaDataCatalog.getReferencedTable(key).equals(strTableName)) {
+				if(otherTable.containsVal(htblColNameValue.get(metaDataCatalog.getReferencedColumn(key)), metaDataCatalog.getReferencingColumn(key))) {
+					throw new DBAppException("Can't delete record due to referential integrity constraints");
+				}
+			}
+
+		}
 		table.deleteRecord(htblColNameValue);
 	}
 
@@ -104,6 +152,10 @@ public class DBApp {
 	// you return holding the result set, it should implement the Iterator
 	// interface.
 	public Iterator join( String[] strarrTableNames )	throws DBAppException{
+		for(int i = 0; i < strarrTableNames.length; i++){
+			if(!tables.containsKey(strarrTableNames[i]))
+				throw new DBAppException("Table " + strarrTableNames[i] + " does not exist");
+		}
 		String[] sortedTables = validateAndSort(strarrTableNames);
 		if(sortedTables == null) return null;
 		Table[] joinTables = new Table[sortedTables.length];
@@ -165,22 +217,18 @@ public class DBApp {
 
 	// following method is used to dump a whole table, i.e. all the rows
 	// are printed to the screen.
-	public void dumpTable( String strTable ) throws DBAppException{
-		if(!tables.containsKey(strTable)) {
-			System.out.println("Table " + strTable + " does not exist");
-			return;
-		}
-		System.out.println(tables.get(strTable).toString());
+	public void dumpTable( String strTableName ) throws DBAppException{
+		if(!tables.containsKey(strTableName))
+			throw new DBAppException("Table " + strTableName + " does not exist");
+		System.out.println(tables.get(strTableName).toString());
 	}
 
 	// following method is used to dump a specific page in a specific
 	// table. What is passed is the page index in the array.
-	public void dumpPage( String strTable, int nPageNumber ) throws DBAppException {
-		if(!tables.containsKey(strTable)) {
-			System.out.println("Table " + strTable + " does not exist");
-			return;
-		}
-		System.out.println(tables.get(strTable).dumpPage(nPageNumber));
+	public void dumpPage( String strTableName, int nPageNumber ) throws DBAppException {
+		if(!tables.containsKey(strTableName))
+			throw new DBAppException("Table " + strTableName + " does not exist");
+		System.out.println(tables.get(strTableName).dumpPage(nPageNumber));
 	}
 
 	public static void main( String[] args ){
@@ -192,18 +240,66 @@ public class DBApp {
 			Hashtable htblColNameType= null;
 			Hashtable htblColNameValue = null;
 
+			strTableName = "Course";
+			htblColNameType = new Hashtable<>();
+			htblColNameType.put("courseID", "java.lang.Integer");
+			htblColNameType.put("courseName", "java.lang.String");
+			dbApp.createTable(strTableName, htblColNameType, "courseID", null, null, null);
+
+			// Inserting data into Course table
+			htblColNameValue = new Hashtable<>();
+			htblColNameValue.put("courseID", 101);
+			htblColNameValue.put("courseName", "Data Structures");
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("courseID", 102);
+			htblColNameValue.put("courseName", "Digital Design");
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("courseID", 201);
+			htblColNameValue.put("courseName", "Biochemistry");
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			strTableName = "Department";
+			htblColNameType = new Hashtable<>();
+			htblColNameType.put("id", "java.lang.Integer");
+			htblColNameType.put("departmentName", "java.lang.String");
+			htblColNameType.put("cID", "java.lang.Integer");
+			dbApp.createTable(strTableName, htblColNameType, "id", "Course", "courseID", "cID");
+
+			// Inserting data into Department table
+			htblColNameValue = new Hashtable<>();
+			htblColNameValue.put("id", 1);
+			htblColNameValue.put("departmentName", "Engineering");
+			htblColNameValue.put("cID", 101);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("id", 2);
+			htblColNameValue.put("departmentName", "Medical Sciences");
+			htblColNameValue.put("cID", 102);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
+			htblColNameValue.clear();
+			htblColNameValue.put("id", 3);
+			htblColNameValue.put("departmentName", "Business Administration");
+			htblColNameValue.put("cID", 201);
+			dbApp.insertIntoTable(strTableName, htblColNameValue);
+
 			strTableName = "Major";
 			htblColNameType = new Hashtable( );
 			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("major", "java.lang.String");
 			htblColNameType.put("depID", "java.lang.Integer");
 			dbApp.createTable( strTableName, htblColNameType, "id", "Department", "id", "depID" );
-			//dbApp.createIndex( strTableName, "id", "major_id_Index" );
+			dbApp.createIndex( strTableName, "id", "major_id_Index" );
 
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 1 ));
 			htblColNameValue.put("major", new String( "CSEN" ) );
-			htblColNameValue.put("depID", Integer.valueOf( 1 ));
+			htblColNameValue.put("depID", Integer.valueOf( 2 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue = new Hashtable( );
@@ -236,10 +332,12 @@ public class DBApp {
 			//dbApp.dumpTable(strTableName);
 
 			//delete a record.
-			//htblColNameValue = new Hashtable( );
-			//htblColNameValue.put("id", Integer.valueOf( 6 ));
-			//htblColNameValue.put("major", new String( "Pharma" ) );
-			//dbApp.deleteFromTable( strTableName , htblColNameValue );
+			strTableName = "Department";
+			htblColNameValue = new Hashtable<>();
+			htblColNameValue.put("id", 1);
+			htblColNameValue.put("departmentName", "Engineering");
+			htblColNameValue.put("cID", 101);
+			dbApp.deleteFromTable( strTableName , htblColNameValue );
 
 			//dbApp.dumpPage(strTableName, 1);
 
@@ -250,8 +348,8 @@ public class DBApp {
 			htblColNameType.put("gpa", "java.lang.Double");
 			htblColNameType.put("majorID", "java.lang.Integer");
 			dbApp.createTable( strTableName, htblColNameType, "id", "Major","id", "majorID" );
-			//dbApp.createIndex( strTableName, "name", "student_id_Index" );
-			//dbApp.createIndex( strTableName, "gpa", "student_gpa_Index" );
+			dbApp.createIndex( strTableName, "name", "student_id_Index" );
+			dbApp.createIndex( strTableName, "gpa", "student_gpa_Index" );
 
 			htblColNameValue = new Hashtable( );
 			htblColNameValue.put("id", Integer.valueOf( 1 ));
@@ -288,53 +386,6 @@ public class DBApp {
 			htblColNameValue.put("majorID", Integer.valueOf( 2 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
-			strTableName = "Department";
-			htblColNameType = new Hashtable<>();
-			htblColNameType.put("id", "java.lang.Integer");
-			htblColNameType.put("departmentName", "java.lang.String");
-			htblColNameType.put("cID", "java.lang.Integer");
-			dbApp.createTable(strTableName, htblColNameType, "id", "Course", "courseID", "cID");
-
-			// Inserting data into Department table
-			htblColNameValue = new Hashtable<>();
-			htblColNameValue.put("id", 1);
-			htblColNameValue.put("departmentName", "Engineering");
-			htblColNameValue.put("cID", 101);
-			dbApp.insertIntoTable(strTableName, htblColNameValue);
-
-			htblColNameValue.clear();
-			htblColNameValue.put("id", 2);
-			htblColNameValue.put("departmentName", "Medical Sciences");
-			htblColNameValue.put("cID", 102);
-			dbApp.insertIntoTable(strTableName, htblColNameValue);
-
-			htblColNameValue.clear();
-			htblColNameValue.put("id", 3);
-			htblColNameValue.put("departmentName", "Business Administration");
-			htblColNameValue.put("cID", 201);
-			dbApp.insertIntoTable(strTableName, htblColNameValue);
-
-			strTableName = "Course";
-			htblColNameType = new Hashtable<>();
-			htblColNameType.put("courseID", "java.lang.Integer");
-			htblColNameType.put("courseName", "java.lang.String");
-			dbApp.createTable(strTableName, htblColNameType, "courseID", null, null, null);
-
-			// Inserting data into Course table
-			htblColNameValue = new Hashtable<>();
-			htblColNameValue.put("courseID", 101);
-			htblColNameValue.put("courseName", "Data Structures");
-			dbApp.insertIntoTable(strTableName, htblColNameValue);
-
-			htblColNameValue.clear();
-			htblColNameValue.put("courseID", 102);
-			htblColNameValue.put("courseName", "Digital Design");
-			dbApp.insertIntoTable(strTableName, htblColNameValue);
-
-			htblColNameValue.clear();
-			htblColNameValue.put("courseID", 201);
-			htblColNameValue.put("courseName", "Biochemistry");
-			dbApp.insertIntoTable(strTableName, htblColNameValue);
 			// Note: any number of tables could be joined together.
 			String[] strTables;
 			strTables = new String[4];
