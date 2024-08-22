@@ -1,6 +1,8 @@
 /** * @author Wael Abouelsaadat */
 
 import TableAttr.*;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Hashtable;
 
@@ -102,7 +104,62 @@ public class DBApp {
 	// you return holding the result set, it should implement the Iterator
 	// interface.
 	public Iterator join( String[] strarrTableNames )	throws DBAppException{
-		return null;
+		String[] sortedTables = validateAndSort(strarrTableNames);
+		if(sortedTables == null) return null;
+		Table[] joinTables = new Table[sortedTables.length];
+		for(int i = 0; i < sortedTables.length; i++) {
+			joinTables[i] = tables.get(sortedTables[i]);
+		}
+		ArrayList<Tuple> it = new ArrayList<>();
+		for(int i = 0; i < joinTables.length - 1; i++) {
+			String referencedCol = metaDataCatalog.getReferencedColumn(sortedTables[i]);
+			String referencingCol = metaDataCatalog.getReferencingColumn(sortedTables[i]);
+			joinTables[i].join(joinTables[i + 1], it, referencedCol, referencingCol);
+		}
+		return it.iterator();
+	}
+	public String[] validateAndSort(String[] strarrTableNames) {
+		Pair[] modTableNames = new Pair[strarrTableNames.length];
+		for(int i = 0; i < strarrTableNames.length; i++) {
+			String referencedTable = metaDataCatalog.getReferencedTable(strarrTableNames[i]);
+			modTableNames[i] = new Pair(strarrTableNames[i], referencedTable);
+		}
+		Pair noReferencePair = new Pair();
+		int noReferenceTablesCount = countNoReference(noReferencePair, modTableNames);
+		if(noReferenceTablesCount >= 2) return null;
+		return sortTopologically(noReferencePair, modTableNames);
+	}
+	private int countNoReference(Pair noReferencePair, Pair[] modTableNames) {
+		int ret = 0;
+		for(int i = 0; i < modTableNames.length; i++) {
+			boolean foundReference = false;
+			for(int j = 0; j < modTableNames.length; j++) if(!foundReference) {
+				if(i == j) continue;
+				foundReference = modTableNames[j].first.equals(modTableNames[i].second);
+			}
+			if(!foundReference) {
+				noReferencePair.first = modTableNames[i].first;
+				noReferencePair.second = modTableNames[i].second;
+				ret++;
+			}
+		}
+		return ret;
+	}
+	private String[] sortTopologically(Pair noReferencePair, Pair[] modTableNames) {
+		String[] sortedTables = new String[modTableNames.length];
+		int index = sortedTables.length - 1;
+		String search = noReferencePair.first;
+		sortedTables[index] = search;
+		index--;
+		while(index >= 0) {
+			for (int i = 0; i < modTableNames.length; i++) {
+				if (modTableNames[i].second != null && modTableNames[i].second.equals(search)) {
+					sortedTables[index] = modTableNames[i].first;
+					index--;
+				}
+			}
+		}
+		return sortedTables;
 	}
 
 	// following method is used to dump a whole table, i.e. all the rows
@@ -183,44 +240,44 @@ public class DBApp {
 
 			strTableName = "Student";
 			htblColNameType = new Hashtable( );
-			htblColNameType.put("id", "java.lang.Integer");
+			htblColNameType.put("sid", "java.lang.Integer");
 			htblColNameType.put("name", "java.lang.String");
 			htblColNameType.put("gpa", "java.lang.Double");
 			htblColNameType.put("majorID", "java.lang.Integer");
-			dbApp.createTable( strTableName, htblColNameType, "id", "Major","id", "majorID" );
-			dbApp.createIndex( strTableName, "id", "student_id_Index" );
+			dbApp.createTable( strTableName, htblColNameType, "sid", "Major","id", "majorID" );
+			dbApp.createIndex( strTableName, "sid", "student_id_Index" );
 			dbApp.createIndex( strTableName, "gpa", "student_gpa_Index" );
 
 			htblColNameValue = new Hashtable( );
-			htblColNameValue.put("id", Integer.valueOf( 1 ));
+			htblColNameValue.put("sid", Integer.valueOf( 1 ));
 			htblColNameValue.put("name", new String("Ahmed Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 0.95 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 1 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("id", Integer.valueOf( 2 ));
+			htblColNameValue.put("sid", Integer.valueOf( 2 ));
 			htblColNameValue.put("name", new String("Ahmed Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 0.95 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 2 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("id", Integer.valueOf( 3 ));
+			htblColNameValue.put("sid", Integer.valueOf( 3 ));
 			htblColNameValue.put("name", new String("Dalia Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 1.25 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 3 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("id", Integer.valueOf( 4 ));
+			htblColNameValue.put("sid", Integer.valueOf( 4 ));
 			htblColNameValue.put("name", new String("John Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 1.5 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 1 ));
 			dbApp.insertIntoTable( strTableName , htblColNameValue );
 
 			htblColNameValue.clear( );
-			htblColNameValue.put("id", Integer.valueOf( 5 ));
+			htblColNameValue.put("sid", Integer.valueOf( 5 ));
 			htblColNameValue.put("name", new String("Zaky Noor" ) );
 			htblColNameValue.put("gpa", Double.valueOf( 0.88 ) );
 			htblColNameValue.put("majorID", Integer.valueOf( 2 ));
@@ -232,6 +289,9 @@ public class DBApp {
 			strTables[0]  = "Major";
 			strTables[1]  = "Student";
 			Iterator it = dbApp.join( strTables );
+			while(it.hasNext( )) {
+				System.out.println(it.next());
+			}
 
 		}
 		catch(Exception exp){

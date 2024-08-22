@@ -1,6 +1,9 @@
 package TableAttr;
 import BTree.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class Page {
     private static int nMaxRows;
@@ -97,6 +100,31 @@ public class Page {
         }
         return false;
     }
+    public Tuple foundTuple(String colName, Object value) {
+        for(int i = 0; i < nMaxRows; i++) {
+            if(tuples[i] == null) continue;
+            if(tuples[i].getColValue(colName).equals(value)) {
+                return tuples[i];
+            }
+        }
+        return null;
+    }
+    public void join(Table otherTable, ArrayList<Tuple> tuplesList, BTree otherBTree, String referencingCol) {
+        for(int i = 0; i < nMaxRows; i++) {
+            if(tuples[i] == null) continue;
+            Object value = tuples[i].getColValue(referencingCol);
+            if(otherBTree == null) {
+                Tuple otherTuple = otherTable.findTuple(referencingCol, value);
+                if(otherTuple == null) continue;
+                tuplesList.add(tuples[i].joinTuples(otherTuple));
+                continue;
+            }
+            List<Tuple> otherTuple = otherBTree.search((Comparable)value);
+            if(otherTuple == null) continue;
+            tuplesList.add(tuples[i].joinTuples(otherTuple.getFirst()));
+        }
+    }
+
     public boolean isEmpty() {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] != null) return false;

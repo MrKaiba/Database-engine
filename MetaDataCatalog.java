@@ -31,4 +31,13 @@ public class MetaDataCatalog {
     public Hashtable<String,String> gethtblColNameType(String tableName) {
         return tablesMetaData.get(tableName).htblColNameType;
     }
+    public String getReferencedTable(String tableName) {
+        return tablesMetaData.get(tableName).strReferencedTable;
+    }
+    public String getReferencedColumn(String tableName) {
+        return tablesMetaData.get(tableName).strReferencedColumn;
+    }
+    public String getReferencingColumn(String tableName) {
+        return tablesMetaData.get(tableName).strReferencingColumn;
+    }
 }

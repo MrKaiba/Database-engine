@@ -3,7 +3,6 @@ package BTree;
 public class BTreeTest {
 	public static void main(String[] args) {
 		BTree<Integer, Integer> tree = new BTree();
-
 		//unique keys
 		tree.insert(50, 50);
 		tree.insert(15, 15);

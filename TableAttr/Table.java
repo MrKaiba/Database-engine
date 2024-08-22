@@ -1,6 +1,6 @@
 package TableAttr;
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.*;
+
 import BTree.*;
 
 
@@ -31,9 +31,6 @@ public class Table {
             if(pages[i] == null) continue;
             pages[i].insertAllTuples(colName, btree);
         }
-        //testing
-        DBBTreeIterator<Integer, Integer> iterator = new DBBTreeIterator(btree);
-        iterator.print();
     }
 
     public String toString() {
@@ -138,7 +135,7 @@ public class Table {
         for(Map.Entry<String, Object> entry : tupleHash.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            if(indices.contains(key))
+            if(indices.containsKey(key))
                 indices.get(key).insert((Comparable)value, tuple);
         }
     }
@@ -283,5 +280,64 @@ public class Table {
                 pages[nextPage].insertRecord(nextRow, pages[i].getTuple(j));
             }
         }
+    }
+    public void join(Table otherTable, ArrayList<Tuple> tuples, String referencedCol, String referencingCol) {
+        if(tuples.isEmpty())
+            joinFirstTwo(otherTable, tuples, referencedCol, referencingCol);
+        else
+            BTreeJoin(otherTable, tuples, referencedCol, referencingCol, tuples.iterator());
+    }
+
+    private void joinFirstTwo(Table otherTable, ArrayList<Tuple> tuples, String referencedCol, String referencingCol) {
+        if (indices == null)
+            linearJoin(otherTable, tuples, referencedCol, referencingCol);
+        else if (indices.containsKey(referencingCol)) {
+            BTree btree = indices.get(referencingCol);
+            DBBTreeIterator iterator = new DBBTreeIterator(btree);
+            BTreeJoin(otherTable, tuples, referencedCol, referencingCol, iterator);
+        } else {
+            BTree btree = indices.entrySet().iterator().next().getValue();
+            DBBTreeIterator iterator = new DBBTreeIterator(btree);
+            BTreeJoin(otherTable, tuples, referencedCol, referencingCol, iterator);
+        }
+    }
+
+    private void BTreeJoin(Table otherTable, ArrayList<Tuple> tuples, String referencedCol, String referencingCol, Iterator iterator) {
+        BTree otherBTree = otherTable.getBTree(referencedCol);
+
+        while(iterator.hasNext()) {
+            Tuple tuple = (Tuple)iterator.next();
+            Object value = tuple.getColValue(referencingCol);
+            if(otherBTree == null) {
+                Tuple otherTuple = otherTable.findTuple(referencedCol, value);
+                if(otherTuple == null) continue;
+                tuples.add(tuple.joinTuples(otherTuple));
+                continue;
+            }
+            List<Tuple> otherTuple = otherBTree.search((Comparable)value);
+            if(otherTuple == null) continue;
+            tuples.add(tuple.joinTuples(otherTuple.getFirst()));
+        }
+    }
+
+    private void linearJoin(Table otherTable, ArrayList<Tuple> tuples, String referencedCol, String referencingCol) {
+        BTree otherBTree = otherTable.getBTree(referencedCol);
+        for(int i = 0; i < pagesSize; i++) {
+            if(pages[i] == null) continue;
+            pages[i].join(otherTable, tuples, otherBTree, referencingCol);
+        }
+    }
+
+    public Tuple findTuple(String colName, Object value) {
+        for(int i = 0; i < pagesSize; i++) {
+            if(pages[i] == null) continue;
+            Tuple foundTuple = pages[i].foundTuple(colName, value);
+            if(foundTuple != null) return foundTuple;
+        }
+        return null;
+    }
+    private BTree getBTree(String colName) {
+        if(indices == null || !indices.containsKey(colName)) return null;
+        return indices.get(colName);
     }
 }

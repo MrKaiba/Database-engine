@@ -24,6 +24,14 @@ public class Tuple {
         Comparable<Object> comparableThisValue = (Comparable<Object>) thisValue;
         return comparableThisValue.compareTo(otherValue) >= 0;
     }
+    public Tuple joinTuples(Tuple otherTuple) {
+        Hashtable<String, Object> tupleHash = new Hashtable(this.tuple);
+        for(Map.Entry<String, Object> entry : otherTuple.getTuple().entrySet()) {
+            tupleHash.put(entry.getKey(), entry.getValue());
+        }
+        Tuple newTuple = new Tuple(tupleHash);
+        return newTuple;
+    }
     public String toString() {
         String str = "";
         for (Map.Entry<String, Object> entry : this.tuple.entrySet()) {
