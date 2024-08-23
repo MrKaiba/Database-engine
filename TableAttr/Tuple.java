@@ -4,7 +4,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 public class Tuple {
-    Hashtable<String, Object> tuple;
+    private final Hashtable<String, Object> tuple;
     public Tuple(Hashtable<String, Object> tuple) {
         this.tuple = tuple;
     }
@@ -12,11 +12,12 @@ public class Tuple {
         return this.tuple;
     }
     public boolean isSame(Tuple tuple) {
-        return this.tuple.equals(tuple.tuple);
+        return this.tuple.equals(tuple.getTuple());
     }
     public Object getColValue(String colName) {
         return this.tuple.get(colName);
     }
+    /*Comparing 2 tuples on clustering keys for sorting! */
     public boolean compare(String clusteringKey, Tuple otherTuple) {
         Object thisValue = this.tuple.get(clusteringKey);
         Object otherValue = otherTuple.tuple.get(clusteringKey);
@@ -42,6 +43,7 @@ public class Tuple {
         Tuple newTuple = new Tuple(tupleHash);
         return newTuple;
     }
+    @Override
     public String toString() {
         String str = "";
         for (Map.Entry<String, Object> entry : this.tuple.entrySet()) {

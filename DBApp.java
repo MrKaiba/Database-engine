@@ -15,14 +15,14 @@ public class DBApp {
 
 	public DBApp( ){
 		init(3);
-		tables = new Hashtable<>();
-		metaDataCatalog = new MetaDataCatalog();
 	}
 
 	// init does whatever initialization you would like. It takes as input
 	// the number of rows/tuples per page.
-	public void init( int nMaximumRowsinPage ){
+	public void init( int nMaximumRowsinPage ) {
 		Table.setnMaxRows(nMaximumRowsinPage);
+		tables = new Hashtable<>();
+		metaDataCatalog = new MetaDataCatalog();
 	}
 
 	// htblColNameValue will have the column name as key and the data
@@ -113,8 +113,9 @@ public class DBApp {
 		Table table = tables.get(strTableName);
 		String clusteringKey = metaDataCatalog.getClusteringKeyColumn(strTableName);
 		Hashtable<String, String>htblColNameType = metaDataCatalog.gethtblColNameType(strTableName);
-		if(!table.insertRecord(clusteringKey, htblColNameValue, htblColNameType))
+		if(!table.validateRecord(htblColNameValue, clusteringKey, htblColNameType))
 			throw new DBAppException("Insertion failed due to invalid record");
+		table.insertRecord(clusteringKey, htblColNameValue);
 	}
 
 
