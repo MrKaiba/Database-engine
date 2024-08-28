@@ -247,6 +247,8 @@ public class DBApp {
 			htblColNameType.put("courseName", "java.lang.String");
 			dbApp.createTable(strTableName, htblColNameType, "courseID", null, null, null);
 
+			dbApp.createIndex( strTableName, "courseID", "course_id_index" );
+
 			// Inserting data into Course table
 			htblColNameValue = new Hashtable<>();
 			htblColNameValue.put("courseID", 101);
@@ -263,7 +265,9 @@ public class DBApp {
 			htblColNameValue.put("courseName", "Biochemistry");
 			dbApp.insertIntoTable(strTableName, htblColNameValue);
 
-			strTableName = "Department";
+			dbApp.dumpTable(strTableName);
+
+			/*strTableName = "Department";
 			htblColNameType = new Hashtable<>();
 			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("departmentName", "java.lang.String");
@@ -397,7 +401,7 @@ public class DBApp {
 			Iterator it = dbApp.join( strTables );
 			while(it.hasNext( )) {
 				System.out.println(it.next());
-			}
+			}*/
 
 		}
 		catch(Exception exp){
