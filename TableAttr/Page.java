@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Page {
     private static int nMaxRows;
-    private Tuple[] tuples;
+    private final Tuple[] tuples;
 
     public Page() {
         tuples = new Tuple[nMaxRows];
@@ -18,7 +18,7 @@ public class Page {
     public static int getnMaxRows() {
         return Page.nMaxRows;
     }
-
+    @Override
     public String toString() {
         String str = "";
         for (int i = 0; i < nMaxRows; i++) {
@@ -27,14 +27,13 @@ public class Page {
         }
         return str.substring(0, str.length() - 1);
     }
-
+    /* to insert tuple AND find last gap inside pages (if any) before inserting tuple at the same time! */
     public boolean tupleFound(String clusteringKey, Tuple tuple, ObjWrapper obj) {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) {
                 obj.gapRow = i;
                 obj.gapPage = 1;
-            }
-            if(tuples[i] != null && tuples[i].compare(clusteringKey, tuple)) {
+            } else if(tuples[i].compare(clusteringKey, tuple)) {
                 if(obj.gapPage != -1) {
                     obj.newRow = (i == 0 ? nMaxRows - 1 : i - 1);
                     obj.samePage = i != 0;
@@ -45,6 +44,7 @@ public class Page {
         }
         return false;
     }
+    /* to get gap after tuple (if any) before insertion!  */
     public boolean getNextGap(ObjWrapper obj) {
         for(int i = obj.newRow; i < nMaxRows; i++) {
             if(tuples[i] == null) {
@@ -54,6 +54,7 @@ public class Page {
         }
         return false;
     }
+    /* insert tuples of a certain column in B+ tree after table was populated */
     public void insertAllTuples(String colName, BTree btree) {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) continue;
@@ -64,7 +65,8 @@ public class Page {
     public Tuple getTuple(int index) {
         return tuples[index];
     }
-    public void getLastGap(ObjWrapper obj) {
+    /* get first gap after last element in the table */
+    public void getFirstGap(ObjWrapper obj) {
         for(int i = nMaxRows - 1; i >= 0; i--) {
             if(tuples[i] == null) {
                 obj.gapRow = i;
@@ -91,6 +93,7 @@ public class Page {
         }
         return false;
     }
+    /* for validation as no duplicates are allowed in clustering key column */
     public boolean containsPrimary(String clusteringKey, Object tupleClusteringKey) {
         for(int i = 0; i < nMaxRows; i++) {
             if(tuples[i] == null) continue;

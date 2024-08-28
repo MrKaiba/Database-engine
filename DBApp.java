@@ -15,14 +15,14 @@ public class DBApp {
 
 	public DBApp( ){
 		init(3);
-		tables = new Hashtable<>();
-		metaDataCatalog = new MetaDataCatalog();
 	}
 
 	// init does whatever initialization you would like. It takes as input
 	// the number of rows/tuples per page.
-	public void init( int nMaximumRowsinPage ){
+	public void init( int nMaximumRowsinPage ) {
 		Table.setnMaxRows(nMaximumRowsinPage);
+		tables = new Hashtable<>();
+		metaDataCatalog = new MetaDataCatalog();
 	}
 
 	// htblColNameValue will have the column name as key and the data
@@ -113,8 +113,9 @@ public class DBApp {
 		Table table = tables.get(strTableName);
 		String clusteringKey = metaDataCatalog.getClusteringKeyColumn(strTableName);
 		Hashtable<String, String>htblColNameType = metaDataCatalog.gethtblColNameType(strTableName);
-		if(!table.insertRecord(clusteringKey, htblColNameValue, htblColNameType))
+		if(!table.validateRecord(htblColNameValue, clusteringKey, htblColNameType))
 			throw new DBAppException("Insertion failed due to invalid record");
+		table.insertRecord(clusteringKey, htblColNameValue);
 	}
 
 
@@ -246,6 +247,8 @@ public class DBApp {
 			htblColNameType.put("courseName", "java.lang.String");
 			dbApp.createTable(strTableName, htblColNameType, "courseID", null, null, null);
 
+			dbApp.createIndex( strTableName, "courseID", "course_id_index" );
+
 			// Inserting data into Course table
 			htblColNameValue = new Hashtable<>();
 			htblColNameValue.put("courseID", 101);
@@ -262,7 +265,9 @@ public class DBApp {
 			htblColNameValue.put("courseName", "Biochemistry");
 			dbApp.insertIntoTable(strTableName, htblColNameValue);
 
-			strTableName = "Department";
+			dbApp.dumpTable(strTableName);
+
+			/*strTableName = "Department";
 			htblColNameType = new Hashtable<>();
 			htblColNameType.put("id", "java.lang.Integer");
 			htblColNameType.put("departmentName", "java.lang.String");
@@ -396,7 +401,7 @@ public class DBApp {
 			Iterator it = dbApp.join( strTables );
 			while(it.hasNext( )) {
 				System.out.println(it.next());
-			}
+			}*/
 
 		}
 		catch(Exception exp){

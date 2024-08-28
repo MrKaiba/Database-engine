@@ -8,7 +8,7 @@ class MetaData {
     String strReferencingColumn;
 }
 public class MetaDataCatalog {
-    Hashtable<String, MetaData> tablesMetaData;
+    private final Hashtable<String, MetaData> tablesMetaData;
 
     public MetaDataCatalog() {
         tablesMetaData = new Hashtable<>();

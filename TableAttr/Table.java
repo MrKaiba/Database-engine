@@ -31,6 +31,7 @@ public class Table {
     public boolean checkIndex(String colName) {
          return (indices != null && indices.containsKey(colName));
     }
+    @Override
     public String toString() {
         String str = "";
         for(int i = 0; i < pagesSize; i++) {
@@ -49,7 +50,7 @@ public class Table {
         return str;
     }
 
-    private boolean validateRecord(Hashtable<String, Object> htblColNameValue, String strClusteringKey, Hashtable<String,String> htblColNameType) {
+    public boolean validateRecord(Hashtable<String, Object> htblColNameValue, String strClusteringKey, Hashtable<String,String> htblColNameType) {
         if(htblColNameValue == null)
             return false;
         for (Map.Entry<String, Object> entry : htblColNameValue.entrySet()) {
@@ -94,36 +95,30 @@ public class Table {
                 return;
             }
         }
+        System.out.println("Element not found so nothing is deleted!");
     }
-
-    public boolean insertRecord(String strClusteringKey, Hashtable<String,Object> htblColNameValue,
-                             Hashtable<String,String> htblColNameType) {
+    public void insertRecord(String strClusteringKey, Hashtable<String,Object> htblColNameValue) {
         Hashtable<String, Object> colNameValue = new Hashtable<>(htblColNameValue);
-        if(validateRecord(colNameValue, strClusteringKey, htblColNameType)) {
-            Tuple tuple = new Tuple(colNameValue);
-            ObjWrapper obj = new ObjWrapper();
-            int prevGap = -1;
-            for(int i = 0; i < pagesSize; i++) {
-                if(pages[i] == null) continue;
-                if(obj.gapPage != prevGap) {
-                    int tempPrevGap = getPrevPage(i);
-                    prevGap = tempPrevGap;
-                    obj.gapPage = tempPrevGap;
-                }
-                if(pages[i].tupleFound(strClusteringKey, tuple, obj)) {
-                    if(obj.gapPage != prevGap) {
-                        obj.gapPage = i;
-                    }
-                    obj.newPage = i;
-                    break;
-                }
+        Tuple tuple = new Tuple(colNameValue);
+        ObjWrapper obj = new ObjWrapper();
+        int prevGap = -1;
+        for(int i = 0; i < pagesSize; i++) {
+            if(pages[i] == null) continue;
+            if(obj.gapPage != prevGap) {
+                int tempPrevGap = getPrevPage(i);
+                prevGap = tempPrevGap;
+                obj.gapPage = tempPrevGap;
             }
-            insertInBTree(tuple);
-            insert(obj, tuple);
-            return true;
-        }else {
-            return false;
+            if(pages[i].tupleFound(strClusteringKey, tuple, obj)) {
+                if(obj.gapPage != prevGap) {
+                    obj.gapPage = i;
+                }
+                obj.newPage = i;
+                break;
+            }
         }
+        insertInBTree(tuple);
+        insert(obj, tuple);
     }
 
     private void insertInBTree(Tuple tuple) {
@@ -155,7 +150,7 @@ public class Table {
         int prevGap = -1;
         for(int i = pagesSize - 1; i >= 0; i--) {
             if(pages[i] == null) continue;
-            pages[i].getLastGap(obj);
+            pages[i].getFirstGap(obj);
             if(obj.gapPage != prevGap) {
                 prevGap = obj.gapPage = i;
             }
@@ -170,7 +165,16 @@ public class Table {
         obj.gapRow = savedGapRow;
         return false;
     }
-
+    /* handling insertion cases as follows
+        1-found tuple greater than or equal to the passed tuple and found a gap before it(Shift Up).
+        2-Same as 1st case but did not find a gap before it which is separated into two cases:
+            2.1-found no gaps in the whole table(Create new page).
+            2.2-found a gap after the tuple.(Shift Down).
+        3-found a gap but the inserted tuple has the largest value, and it's separated into two cases:
+            3.1-found a gap after the last present element.(Normal insertion in that gap).
+            3.2-found a gap between the present elements(Shift Up).
+        4-No gaps found in the whole table(Create new page).
+     */
     private void insert(ObjWrapper obj, Tuple tuple) {
         int nMax = Page.getnMaxRows();
         if(obj.gapRow != -1 && obj.newRow != -1) {
