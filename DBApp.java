@@ -332,6 +332,7 @@ public class DBApp {
 			htblColNameValue.put("majorID", 2);
 			dbApp.deleteFromTable( strTableName , htblColNameValue );
 
+
 			dbApp.dumpTable(strTableName);
 			//dbApp.dumpPage(strTableName, 1);
 

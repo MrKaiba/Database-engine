@@ -95,7 +95,7 @@ public class Table {
                 return;
             }
         }
-        System.out.println("Element not found so nothing is deleted!");
+        System.out.println("Element not found");
     }
     public void insertRecord(String strClusteringKey, Hashtable<String,Object> htblColNameValue) {
         Hashtable<String, Object> colNameValue = new Hashtable<>(htblColNameValue);

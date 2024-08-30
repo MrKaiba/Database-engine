@@ -1,5 +1,6 @@
 package BTree;
 
+import TableAttr.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -169,7 +170,14 @@ class BTreeLeafNode<TKey extends Comparable<TKey>, TValue> extends BTreeNode<TKe
 		if (index == -1) return false;
 
 		List<TValue> valueList = this.values[index];
-		valueList.remove(value);
+		List<TValue> tempList = new ArrayList<>(valueList);
+		for(int i = 0; i < tempList.size(); ++i) {
+			Tuple curIdx = (Tuple)tempList.get(i);
+			if(curIdx.isSame((Tuple)value)) {
+				valueList.remove(i);
+			}
+		}
+		tempList.clear();
 		if (valueList.isEmpty()) {
 			this.deleteAt(index);
 		}
