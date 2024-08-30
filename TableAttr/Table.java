@@ -138,7 +138,7 @@ public class Table {
         for(Map.Entry<String, Object> entry : tupleHash.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            if(indices.contains(key))
+            if(indices.containsKey(key))
                 indices.get(key).delete((Comparable)value, tuple);
         }
     }
